@@ -47,19 +47,23 @@ teams = {
 
 class TeamGeneralStats:
 
-    def __init__(self, teamname):
-        self.teamname = teamname
+    def __init__(self, teamname, opponentteam):
+        self.teamname, self.opponentteam = teamname, opponentteam
 
         self.url = 'http://stats.nba.com/stats/leaguedashteamstats?'
 
-        self.params = {'Conference': '', 'DateFrom': '', 'DateTo': '', 'Division': '', 'GameScope': '', 'GameSegment': '',
-                  'LastNGames': '0', 'LeagueID': '00', 'Location': '', 'MeasureType': 'Base', 'Month': '0',
-                  'OpponentTeamID': '0', 'Outcome': '', 'PORound': '', 'PaceAdjust': 'N', 'PerMode': 'PerGame',
-                  'Period': '0', 'PlayerExperience': '', 'PlayerPosition': '', 'PlusMinus': 'N', 'Rank': 'N',
-                  'Season': '2014-15', 'SeasonSegment': '', 'SeasonType': 'Regular Season', 'ShotClockRange': '',
-                  'StarterBench': '', 'TeamID': '0', 'VsConference': '', 'VsDivision': ''}
+        self.params = {'Conference': '', 'DateFrom': '', 'DateTo': '', 'Division': '', 'GameScope': '',
+                       'GameSegment': '', 'LastNGames': '0', 'LeagueID': '00', 'Location': '', 'MeasureType': 'Base',
+                       'Month': '0', 'OpponentTeamID': '0', 'Outcome': '', 'PORound': '', 'PaceAdjust': 'N',
+                       'PerMode': 'PerGame', 'Period': '0', 'PlayerExperience': '', 'PlayerPosition': '',
+                       'PlusMinus': 'N', 'Rank': 'N', 'Season': '2014-15', 'SeasonSegment': '',
+                       'SeasonType': 'Regular Season', 'ShotClockRange': '', 'StarterBench': '', 'TeamID': '0',
+                       'VsConference': '', 'VsDivision': ''}
 
     def base_stats(self):
+        # Change MeasureType param to Base
+        self.params['MeasureType'] = 'Base'
+
         page = requests.get(self.url, self.params)
 
         values = page.json()['resultSets'][0]['rowSet']
@@ -116,5 +120,17 @@ class TeamGeneralStats:
         headers = page.json()['resultSets'][0]['headers']
         return [dict(zip(headers, value)) for value in values][teams[self.teamname]]
 
+    def change_opponent(self):
+        # Change OpponentTeamID param to Inputted Team Name
+        self.params['OpponentTeamID'] = self.opp_team_id()
 
-print(TeamGeneralStats('Golden State Warriors').opponent_stats())
+    def reset_opponent(self):
+        self.params['OpponentTeamID'] = ''
+
+    def opp_team_id(self):
+        page = requests.get(self.url, self.params)
+
+        values = page.json()['resultSets'][0]['rowSet']
+        headers = page.json()['resultSets'][0]['headers']
+        return [dict(zip(headers, value)) for value in values][teams[self.opponentteam]]['TEAM_ID']
+
